@@ -6,16 +6,20 @@ public class Beacon {
     private String major;
     private String minor;
     private String macAddress;
+    private Double distance;
+    private Long findedTime;
     private boolean isFinded;
 
     public Beacon() {}
 
-    public Beacon(String uuid, String major, String minor, String macAddress, boolean isFinded) {
+    public Beacon(String uuid, String major, String minor, String macAddress, Double distance, boolean isFinded, Long findedTime) {
         this.uuid = uuid;
         this.major = major;
         this.minor = minor;
         this.macAddress = macAddress;
+        this.distance = distance;
         this.isFinded = isFinded;
+        this.findedTime = findedTime;
     }
 
     public String getUuid() {
@@ -56,5 +60,21 @@ public class Beacon {
 
     public void setFinded(boolean finded) {
         isFinded = finded;
+    }
+
+    public Double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(Double distance) {
+        this.distance = distance;
+    }
+
+    public Long getFindedTime() {
+        return findedTime;
+    }
+
+    public void setFindedTime(Long findedTime) {
+        this.findedTime = findedTime;
     }
 }

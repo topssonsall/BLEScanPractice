@@ -63,6 +63,8 @@ public class BeaconService extends Service {
 
     public void init() {
 
+        //Log.d("BeaconTest", System.currentTimeMillis()+"");
+
         //그 외 값 초기화
         isScanning = false;
 
@@ -91,19 +93,29 @@ public class BeaconService extends Service {
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
                 bluetoothDevice = result.getDevice();
-                ScanRecord scanRecord = result.getScanRecord();
                 String strAddress = bluetoothDevice.getAddress();
 
                 for (Beacon beacon : MainActivity.beaconList) {
                     if (beacon.getMacAddress().equals(strAddress)) {
+                        Log.d("BeaconTest", strAddress + "찾음");
+                        if(beacon.isFinded()){
+                            //이미 발견되었고, 재탐색된 경우
+                            for (Beacon findedBeacon:MainActivity.findedBeaconList) {
+                                if(findedBeacon.getMacAddress().equals(strAddress)){
+                                    findedBeacon.setFindedTime(System.currentTimeMillis());
+                                }
+                            }
+                        }
+
                         //특정할 수 있는 Beacon 발견
-                        if(!beacon.isFinded()) {
-                            MainActivity.findedBeaconList.add(beacon);
+                        if (!beacon.isFinded()) {
+                            beacon.setFindedTime(System.currentTimeMillis());
                             beacon.setFinded(true);
+                            MainActivity.findedBeaconList.add(beacon);
+                            //MainActivity.adapter.notifyDataSetChanged();
                         }
                     }
                 }
-                MainActivity.adapter.notifyDataSetChanged();
             }
 
             //Scan 실패시

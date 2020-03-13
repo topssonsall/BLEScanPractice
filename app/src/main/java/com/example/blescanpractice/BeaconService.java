@@ -14,6 +14,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.SparseArray;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -30,7 +31,6 @@ public class BeaconService extends Service {
     public static List<ScanFilter> scanFilterList;
     public static ScanCallback scanCallback;
     public BluetoothDevice bluetoothDevice;
-
     //그 외 변수
     public static boolean isScanning;
 
@@ -38,7 +38,6 @@ public class BeaconService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d("BeaconTest", "Service onCreate");
         init();
         setFunction();
     }
@@ -62,7 +61,7 @@ public class BeaconService extends Service {
         return null;
     }
 
-    public void init(){
+    public void init() {
 
         //그 외 값 초기화
         isScanning = false;
@@ -70,34 +69,33 @@ public class BeaconService extends Service {
         //블루투쓰 및 스캐너 세팅
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
-        if(bluetoothAdapter == null) return;
+        if (bluetoothAdapter == null) return;
         scanner = bluetoothAdapter.getBluetoothLeScanner();
-
-        Log.d("BeaconTest", bluetoothAdapter.isEnabled()+"");
-
         scanFilterList = new ArrayList<>();
 
         //Scan 모드 세팅 (저전력 모드)
         scanSettings = new ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).setReportDelay(0).build();
+
+        //등록 MAC Address 체크
+        Log.d("BeaconTest", "[등록된 비콘 MacAddress 리스트]");
+        for (Beacon beacon : MainActivity.beaconList) {
+            Log.d("BeaconTest", beacon.getMacAddress());
+        }
     }
 
-    public void setFunction(){
+    public void setFunction() {
+        //ScanCallback
         scanCallback = new ScanCallback() {
             //Scan 성공시
             @Override
             public void onScanResult(int callbackType, ScanResult result) {
                 super.onScanResult(callbackType, result);
-                Log.d("BeaconTest", "onScanResult");
                 bluetoothDevice = result.getDevice();
                 ScanRecord scanRecord = result.getScanRecord();
                 String strAddress = bluetoothDevice.getAddress();
-                String deviceNameToken[] = strAddress.split(":");
 
-                int beaconListSize = MainActivity.beaconList.size();
-                for(int i = 0 ; i < beaconListSize; i++){
-                    Beacon beacon = MainActivity.beaconList.get(i);
-                    Log.d("BeaconTest", "strAddress >>" + strAddress);
-                    if(beacon.getMacAddress().equals(strAddress)){
+                for (Beacon beacon : MainActivity.beaconList) {
+                    if (beacon.getMacAddress().equals(strAddress)) {
                         //특정할 수 있는 Beacon 발견
                         Log.d("BeaconTest", strAddress + " >> 찾음");
                     }
@@ -108,46 +106,50 @@ public class BeaconService extends Service {
             @Override
             public void onScanFailed(int errorCode) {
                 super.onScanFailed(errorCode);
-                Log.d("BeaconTest", "onScanFailed");
+                Log.d("BeaconTest", "onScanFailed 진입");
             }
         };
     }
 
-    public static void scanLeDevice(final boolean enable){
-        Log.d("BeaconTest", "scanLeDevice111");
-        if(enable){
-            Log.d("BeaconTest", "scanLeDevice222");
-            if(scanner != null){
-                Log.d("BeaconTest", "scanLeDevice333");
-                if(isScanning){
+    public static void scanLeDevice(final boolean enable) {
+        if (enable) {
+            if (scanner != null) {
+                if (isScanning) {
                     scanner.stopScan(scanCallback);
                 }
-            scanFilterList.clear();                                           //AC:23:3F:A2:20:76
-            ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress("AC:23:3F:A2:20:76").build();
-            scanFilterList.add(scanFilter);
-            scanner.startScan(scanFilterList, scanSettings,scanCallback);
-            isScanning = true;
-                Log.d("BeaconTest", "scanLeDevice 진입");
+                isScanning = true;
+                scanFilterList.clear();                                            //AC:23:3F:A2:20:7A
+                //ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress("AC:23:3F:A2:20:76").build();
+                //scanFilterList.add(scanFilter);
+                for (Beacon beacon : MainActivity.beaconList) {
+                    ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(beacon.getMacAddress()).build();
+                    scanFilterList.add(scanFilter);
+                }
+                Log.d("BeaconTest", "[ScanFilterList]");
+                for (ScanFilter scanFilter : scanFilterList) {
+                    Log.d("BeaconTest", scanFilter.getDeviceAddress());
+                }
+                scanner.startScan(scanFilterList, scanSettings, scanCallback);
             }
-        }else{
-            if(scanner != null){
-                if(isScanning){
-                    scanner.stopScan(scanCallback);
+        } else {
+            if (scanner != null) {
+                if (isScanning) {
                     isScanning = false;
+                    scanner.stopScan(scanCallback);
                 }
             }
         }
     }
 
-    public static void rescanLeDevice(){
-        if(scanner != null){
-            if(isScanning){
+    public static void rescanLeDevice() {
+        if (scanner != null) {
+            if (isScanning) {
                 scanner.stopScan(scanCallback);
                 isScanning = false;
             }
         }
 
-        if(scanner != null){
+        if (scanner != null) {
             scanner.startScan(scanFilterList, scanSettings, scanCallback);
             isScanning = true;
         }

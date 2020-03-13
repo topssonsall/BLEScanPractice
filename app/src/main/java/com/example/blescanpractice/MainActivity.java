@@ -2,6 +2,8 @@ package com.example.blescanpractice;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
@@ -10,6 +12,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,10 +23,17 @@ public class MainActivity extends AppCompatActivity {
 
     public static final int REQUEST_ENABLE_BT = 1;
 
+    private RecyclerView rvBeacon;
+    private LinearLayoutManager linearLayoutManager;
+    public static RecyclerViewBeaconListAdapter adapter;
+
     private Button btnScan, btnStopScan, btnStopService;
 
     //Beacon List (미리 Beacon들의 정보를 세팅하고 담을 리스트)
     public static List<Beacon> beaconList;
+
+    //찾은 Beacon
+    public static List<Beacon> findedBeaconList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,12 +50,23 @@ public class MainActivity extends AppCompatActivity {
                 new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION}, 1);
 
+        findedBeaconList = new ArrayList<>();
+
         //내가 미리 세팅하는 Beacon 정보
         beaconList = new ArrayList<>();
-        Beacon beacon1 = new Beacon("uuid", "major", "minor", "AC:23:3F:A2:20:7A");
-        Beacon beacon2 = new Beacon("uuid", "major", "minor", "AC:23:3F:A2:20:76");
+        Beacon beacon1 = new Beacon("uuid", "major", "minor", "AC:23:3F:A2:20:7A", false);
+        Beacon beacon2 = new Beacon("uuid", "major", "minor", "AC:23:3F:A2:20:76", false);
         beaconList.add(beacon1);
         beaconList.add(beacon2);
+
+        //Beacon List Recycler View 설정
+        rvBeacon = findViewById(R.id.rv_beacon_list);
+        linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        rvBeacon.setLayoutManager(linearLayoutManager);
+        adapter = new RecyclerViewBeaconListAdapter();
+        adapter.setBeaconList(findedBeaconList);
+        rvBeacon.setAdapter(adapter);
 
         btnScan = findViewById(R.id.btn_scan);
         btnStopScan = findViewById(R.id.btn_stop_scan);
@@ -61,10 +82,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void setFunction() {
-        //1회성 스캔
+        //스캔
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                for (Beacon beacon : beaconList) {
+                    beacon.setFinded(false);
+                }
+                findedBeaconList.clear();
+                adapter.notifyDataSetChanged();
                 start_scan();
             }
         });

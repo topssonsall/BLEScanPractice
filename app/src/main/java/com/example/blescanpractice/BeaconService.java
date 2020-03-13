@@ -97,9 +97,13 @@ public class BeaconService extends Service {
                 for (Beacon beacon : MainActivity.beaconList) {
                     if (beacon.getMacAddress().equals(strAddress)) {
                         //특정할 수 있는 Beacon 발견
-                        Log.d("BeaconTest", strAddress + " >> 찾음");
+                        if(!beacon.isFinded()) {
+                            MainActivity.findedBeaconList.add(beacon);
+                            beacon.setFinded(true);
+                        }
                     }
                 }
+                MainActivity.adapter.notifyDataSetChanged();
             }
 
             //Scan 실패시

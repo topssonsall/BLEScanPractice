@@ -7,9 +7,25 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="8"
+        android:textSize="20dp"
+        android:gravity="center_vertical"
+        android:text="발견한 비콘" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_beacon_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_weight="8"
         android:orientation="horizontal">
 
         <Button
